@@ -1,0 +1,205 @@
+{
+  "tactics": {
+    "TA0001": {
+      "name": "Initial Access",
+      "description": "Attacker mencoba masuk ke sistem"
+    },
+    "TA0003": {
+      "name": "Persistence",
+      "description": "Attacker mencoba maintain access"
+    },
+    "TA0004": {
+      "name": "Privilege Escalation",
+      "description": "Attacker mencoba mendapatkan higher permissions"
+    },
+    "TA0005": {
+      "name": "Defense Evasion",
+      "description": "Attacker mencoba menghindari deteksi"
+    },
+    "TA0007": {
+      "name": "Discovery",
+      "description": "Attacker mencoba reconnaissance testing"
+    }
+  },
+  "techniques": {
+    "T1078": {
+      "name": "Valid Accounts",
+      "tactic": "TA0001",
+      "description": "Menggunakan credential yang valid untuk access",
+      "detection": [
+        "Monitor failed login attempts di /var/log/auth.log",
+        "Track unusual login times atau locations",
+        "Monitor privilege escalation dengan sudo/su commands"
+      ],
+      "mitigation": [
+        "Implement MFA (Multi-Factor Authentication)",
+        "Enforce strong password policies",
+        "Monitor dan alert pada failed login attempts",
+        "Use fail2ban untuk auto-block brute force"
+      ],
+      "commands": [
+        "grep 'Failed password' /var/log/auth.log",
+        "last -f /var/log/wtmp",
+        "lastb"
+      ]
+    },
+    "T1110": {
+      "name": "Brute Force",
+      "tactic": "TA0001",
+      "description": "Attacker mencoba guess credentials",
+      "detection": [
+        "Multiple failed login attempts dalam waktu singkat",
+        "Pattern repetitive login dari IP yang sama",
+        "Unusual usernames di auth logs"
+      ],
+      "mitigation": [
+        "Implement fail2ban",
+        "Rate limiting pada SSH/service authentication",
+        "Account lockout policies",
+        "Strong password requirements"
+      ],
+      "commands": [
+        "grep 'Failed password' /var/log/auth.log | tail -50",
+        "journalctl -u sshd | grep 'Failed'",
+        "fail2ban-client status sshd"
+      ]
+    },
+    "T1053": {
+      "name": "Scheduled Task/Job",
+      "tactic": "TA0003",
+      "description": "Menggunakan cron/systemd timer untuk persistence",
+      "detection": [
+        "Monitor perubahan di crontab files",
+        "Check systemd timer yang mencurigakan",
+        "Review scheduled tasks secara regular"
+      ],
+      "mitigation": [
+        "Restrict crontab permissions",
+        "Monitor /etc/cron* directories",
+        "Use file integrity monitoring (AIDE, Tripwire)",
+        "Audit systemd timer units"
+      ],
+      "commands": [
+        "crontab -l",
+        "ls -la /etc/cron*",
+        "systemctl list-timers --all",
+        "find /etc/cron* -type f -mtime -7"
+      ]
+    },
+    "T1543": {
+      "name": "Create or Modify System Process",
+      "tactic": "TA0003",
+      "description": "Membuat systemd service untuk persistence",
+      "detection": [
+        "New systemd service files",
+        "Modified existing service configurations",
+        "Unusual service startup patterns"
+      ],
+      "mitigation": [
+        "Monitor /etc/systemd/system/ untuk new files",
+        "Use selinux/apparmor untuk restrict service creation",
+        "Regular audit systemd units",
+        "Implement change monitoring"
+      ],
+      "commands": [
+        "systemctl list-unit-files --type=service",
+        "find /etc/systemd/system -type f -mtime -7",
+        "journalctl -u suspicious-service.service"
+      ]
+    },
+    "T1068": {
+      "name": "Exploitation for Privilege Escalation",
+      "tactic": "TA0004",
+      "description": "Exploit vulnerability untuk escalate privileges",
+      "detection": [
+        "Unexpected process running as root",
+        "Kernel exploit signatures di system logs",
+        "SUID binary execution patterns",
+        "Unusual sudo usage"
+      ],
+      "mitigation": [
+        "Keep system updated (apt update && apt upgrade)",
+        "Monitor CVEs untuk kernel/installed packages",
+        "Restrict SUID binaries",
+        "Implement kernel hardening (grsecurity, SELinux)"
+      ],
+      "commands": [
+        "find / -perm -4000 -type f 2>/dev/null",
+        "uname -a",
+        "apt list --upgradable",
+        "journalctl -p err -b"
+      ]
+    },
+    "T1548": {
+      "name": "Abuse Elevation Control Mechanism",
+      "tactic": "TA0004",
+      "description": "Abuse sudo/SUID untuk privilege escalation",
+      "detection": [
+        "Sudo usage dari unexpected users",
+        "NOPASSWD sudo configurations",
+        "Unusual SUID binary executions"
+      ],
+      "mitigation": [
+        "Audit sudoers configuration",
+        "Remove unnecessary SUID bits",
+        "Monitor sudo logs",
+        "Use sudo timeout policies"
+      ],
+      "commands": [
+        "grep -r 'NOPASSWD' /etc/sudoers /etc/sudoers.d/",
+        "find / -perm -4000 2>/dev/null",
+        "journalctl | grep sudo"
+      ]
+    },
+    "T1070": {
+      "name": "Indicator Removal",
+      "tactic": "TA0005",
+      "description": "Attacker menghapus logs/evidence",
+      "detection": [
+        "Missing atau truncated log files",
+        "Gaps di log timestamps",
+        "Suspicious log file modifications",
+        "History file tampering"
+      ],
+      "mitigation": [
+        "Centralized logging (rsyslog ke remote server)",
+        "Log file integrity monitoring",
+        "Immutable log files (chattr +a)",
+        "SIEM for log aggregation"
+      ],
+      "commands": [
+        "ls -la /var/log/",
+        "lsattr /var/log/auth.log",
+        "journalctl --verify",
+        "stat /var/log/auth.log"
+      ]
+    },
+    "T1082": {
+      "name": "System Information Discovery",
+      "tactic": "TA0007",
+      "description": "Attacker collect system information",
+      "detection": [
+        "Unusual enumeration commands",
+        "Scanning dari internal IP",
+        "Excessive system queries"
+      ],
+      "mitigation": [
+        "Monitor command execution patterns",
+        "Audit trails untuk discovery commands",
+        "Network segmentation",
+        "Least privilege principle"
+      ],
+      "commands": [
+        "ps aux | grep -E 'uname|hostname|whoami|ifconfig'",
+        "history | grep -E 'uname|hostname|id'",
+        "w"
+      ]
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "focus": "Linux Defensive Security",
+    "last_updated": "2026-01-06",
+    "description": "Curated MITRE ATT&CK techniques untuk Linux defensive analysis"
+  }
+}

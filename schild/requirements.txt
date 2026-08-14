@@ -1,0 +1,36 @@
+# SCHILD — Autonomous Defense & AI-Driven Threat Hunting
+# Dependencies
+
+# ─── AI Providers ───────────────────────────────────────────────────────────
+openai>=1.30.0
+anthropic>=0.28.0
+google-generativeai>=0.7.0
+
+# ─── Port Mirroring / Packet Capture (optional) ──────────────────────────────
+# Required for: agent.start_port_mirror() / schild mirror start <iface>
+# Requires root or CAP_NET_RAW capability.
+# scapy>=2.5.0
+
+# ─── Environment & Config ───────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ─── ML / Anomaly Detection ─────────────────────────────────────────────────
+scikit-learn>=1.4.0
+numpy>=1.26.0
+
+# ─── Web & Threat Intel ─────────────────────────────────────────────────────
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+duckduckgo-search>=4.0.0
+
+# ─── Data & Storage ─────────────────────────────────────────────────────────
+# (SQLite via stdlib — no extra dep needed)
+
+# ─── Utilities ──────────────────────────────────────────────────────────────
+json_repair>=0.25.0
+rich>=13.7.0          # Enhanced terminal output
+
+# ─── API Backend ────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn>=0.30.0
+pydantic>=2.7.0

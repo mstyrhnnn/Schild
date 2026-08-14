@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+guard_automation.log
+guard_daemon.log
+
+# Artifacts
+.artifacts/
+*.sarif.json
+*.md
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (user-specific)
+.guard_automation.json
+.guard/*.json
+!.guard/*.example
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Testing
+guard.txt
+schild.txt
+all.txt
+AgentLinux.py
+AgentLinux.py.bak
+update_all.py
+test_attacks.sh
