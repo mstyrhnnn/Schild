@@ -223,16 +223,18 @@ class AnthropicProvider(AIProviderBase):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class GeminiProvider(AIProviderBase):
-    """Google Gemini provider."""
+    """Google Gemini provider via google-genai SDK (v1+)."""
 
     def __init__(self, api_key: Optional[str] = None):
         try:
-            import google.generativeai as genai  # type: ignore
+            from google import genai  # type: ignore
+            from google.genai import types  # type: ignore
             self._genai = genai
+            self._types = types
         except ImportError:
-            raise ImportError("Install google-generativeai: pip install google-generativeai")
+            raise ImportError("Install google-genai: pip install google-genai")
 
-        genai.configure(api_key=api_key or GEMINI_API_KEY)
+        self._client = genai.Client(api_key=api_key or GEMINI_API_KEY)
 
     @property
     def provider_name(self) -> str:
@@ -246,24 +248,20 @@ class GeminiProvider(AIProviderBase):
     def analyst_model(self) -> str:
         return GEMINI_ANALYST_MODEL
 
-    def _make_model(self, tier: ModelTier, system_prompt: str = ""):
-        config = {"temperature": 0.3}
+    def _make_config(self, system_prompt: str = ""):
+        kwargs = {"temperature": 0.3}
         if system_prompt:
-            return self._genai.GenerativeModel(
-                model_name=self._model_for_tier(tier),
-                system_instruction=system_prompt,
-                generation_config=config,
-            )
-        return self._genai.GenerativeModel(
-            model_name=self._model_for_tier(tier),
-            generation_config=config,
-        )
+            kwargs["system_instruction"] = system_prompt
+        return self._types.GenerateContentConfig(**kwargs)
 
     def complete(self, prompt: str, system_prompt: str = "",
                  tier: ModelTier = ModelTier.ANALYST, timeout: int = 120) -> str:
         try:
-            model = self._make_model(tier, system_prompt)
-            resp = model.generate_content(prompt)
+            resp = self._client.models.generate_content(
+                model=self._model_for_tier(tier),
+                contents=prompt,
+                config=self._make_config(system_prompt),
+            )
             return resp.text or ""
         except Exception as e:
             return f"Gemini API error: {e}"
@@ -272,9 +270,12 @@ class GeminiProvider(AIProviderBase):
                tier: ModelTier = ModelTier.ANALYST, timeout: int = 120,
                callback: Optional[Callable[[str], None]] = None) -> str:
         try:
-            model = self._make_model(tier, system_prompt)
             full_text = []
-            for chunk in model.generate_content(prompt, stream=True):
+            for chunk in self._client.models.generate_content_stream(
+                model=self._model_for_tier(tier),
+                contents=prompt,
+                config=self._make_config(system_prompt),
+            ):
                 token = chunk.text or ""
                 if token:
                     full_text.append(token)
