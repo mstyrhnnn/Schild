@@ -11,7 +11,7 @@ setup(
     install_requires=[
         "openai>=1.30.0,<2.0.0",
         "anthropic>=0.28.0,<1.0.0",
-        "google-generativeai>=0.7.0,<1.0.0",
+        "google-genai>=1.0.0",
         "python-dotenv>=1.0.0,<2.0.0",
         "scikit-learn>=1.4.0,<2.0.0",
         "numpy>=1.26.0,<3.0.0",
