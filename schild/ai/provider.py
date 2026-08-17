@@ -249,7 +249,10 @@ class GeminiProvider(AIProviderBase):
         return GEMINI_ANALYST_MODEL
 
     def _make_config(self, system_prompt: str = ""):
-        kwargs = {"temperature": 0.3}
+        kwargs = {
+            "temperature": 0.3,
+            "automatic_function_calling": self._types.AutomaticFunctionCallingConfig(disable=True),
+        }
         if system_prompt:
             kwargs["system_instruction"] = system_prompt
         return self._types.GenerateContentConfig(**kwargs)
